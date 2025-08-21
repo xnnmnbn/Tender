@@ -1,0 +1,77 @@
+#include "scenes.hpp"
+#include <iostream>
+
+std::function<void(Scene*& s)> scene_example_init = [](Scene*& s){
+	entt::registry& r = s->reg;
+	auto& manager = s->manager;
+	manager.add_texture("z_d1", "assets/img/zombie_down_1.png");
+	manager.add_texture("z_d2", "assets/img/zombie_down_2.png");
+
+	auto entity= r.create();
+	r.emplace<c_pos>(entity, glm::vec2(0.0, 0.0));
+	r.emplace<c_vel>(entity, glm::vec2(0.31, 0.69));
+	r.emplace<c_rend>(entity, manager.textures["z_d1"], glm::vec2(1, 1), glm::vec2(1, 1));
+	r.emplace<c_anim>(entity);
+	auto& anim = r.get<c_anim>(entity);
+	anim.texs.push_back(manager.textures["z_d1"]);
+	anim.texs.push_back(manager.textures["z_d2"]);
+	anim.index = 0;
+	anim.time = 0.3F;
+	anim.timer = 0;
+
+};
+
+std::function<void(Scene*&)> scene_example_update = [](Scene*& s){
+	entt::registry& reg = s->reg;
+
+	auto move_view = reg.view<c_pos, c_vel>();
+	auto rend_view = reg.view<c_pos, c_rend>();
+	auto anim_view = reg.view<c_anim, c_rend>();
+
+	for(auto& e : move_view){
+		c_pos& p = move_view.get<c_pos>(e);
+		c_vel& v = move_view.get<c_vel>(e);
+
+		p.pos += v.v * GetFrameTime();
+	}
+
+	for(auto& e : anim_view){
+		c_rend& r = anim_view.get<c_rend>(e);
+		c_anim& a = anim_view.get<c_anim>(e);
+
+		a.timer += GetFrameTime();
+
+		if(a.timer >= a.time){
+			a.index += 1;
+			if(a.index >= a.texs.size()){
+				a.index = 0;
+			}
+			r.tex = a.texs[a.index];
+			a.timer = 0;
+		}
+	}
+
+	for(auto& e : rend_view){
+		c_rend& r = rend_view.get<c_rend>(e);
+		c_pos& p = rend_view.get<c_pos>(e);
+
+		Rectangle src = (Rectangle){
+			p.pos.x,
+			p.pos.y,
+			r.tex.width,
+			r.tex.height
+		};
+
+		Rectangle dst = (Rectangle){
+			(p.pos.x - s->cam.pos.x) * METER * RATIO,
+			(p.pos.y - s->cam.pos.y) * METER * RATIO,
+			r.scale.x * METER * RATIO,
+			r.scale.y * METER * RATIO
+		};
+
+
+		DrawTexturePro(r.tex, src, dst, {0, 0}, 0, WHITE);
+	}
+};
+
+Scene* scene_example = new Scene(&scene_example_init, &scene_example_update);
