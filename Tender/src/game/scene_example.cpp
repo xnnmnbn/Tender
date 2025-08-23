@@ -5,6 +5,8 @@
 #include <chrono>
 #include <atomic>
 
+
+
 std::function<void(Scene*& s)> scene_example_init = [](Scene*& s){
 	entt::registry& r = s->reg;
 	auto& manager = s->manager;
@@ -21,6 +23,7 @@ std::function<void(Scene*& s)> scene_example_init = [](Scene*& s){
 	r.emplace<c_rend>(entity, manager.textures["z_d1"], glm::vec2(1, 1), glm::vec2(0, 0));
 	r.emplace<c_anim>(entity);
 	r.emplace<c_rect>(entity, glm::vec4(1, 1, 1, 1), 1);
+	r.emplace<c_cont>(entity);
 	auto& anim = r.get<c_anim>(entity);
 	anim.texs.push_back(manager.textures["z_d1"]);
 	anim.texs.push_back(manager.textures["z_d2"]);
@@ -37,6 +40,28 @@ std::function<void(Scene*&)> scene_example_update = [](Scene*& s){
 	auto move_view = reg.view<c_pos>();
 	auto anim_view = reg.view<c_anim, c_rend>();
 	auto rect_view = reg.view<c_pos, c_rect>();
+	auto cont_view = reg.view<c_pos, c_cont>();
+
+	for(auto& e : cont_view){
+		c_pos& p = cont_view.get<c_pos>(e);
+
+		i8 w, a, s, d;
+		w = IsKeyDown(KEY_W) ? 1 : 0;
+		a = IsKeyDown(KEY_A) ? -1 : 0;
+		s = IsKeyDown(KEY_S) ? -1 : 0;
+		d = IsKeyDown(KEY_D) ? 1 : 0;
+		p.vel.x = (a + d);
+		p.vel.y = (w + s);
+	}
+
+
+
+	for(auto& e : move_view){
+		c_pos& p = move_view.get<c_pos>(e);
+		if(glm::length(p.vel) > 0){
+			p.pos += glm::normalize(p.vel) * GetFrameTime() * 1.0F;
+		}
+	}
 
 	for(auto& e : rect_view){
 		c_rect& r = rect_view.get<c_rect>(e);
@@ -46,10 +71,7 @@ std::function<void(Scene*&)> scene_example_update = [](Scene*& s){
 		r.rect.y = p.pos.y;
 	}
 
-	for(auto& e : move_view){
-		c_pos& p = move_view.get<c_pos>(e);
-		p.pos += p.vel * GetFrameTime();
-	}
+
 
 	for(auto& e : anim_view){
 		c_rend& r = anim_view.get<c_rend>(e);
@@ -85,6 +107,7 @@ std::function<void(Scene*&)> scene_example_update = [](Scene*& s){
 			r.scale.x * METER,
 			r.scale.y * METER
 		};
+
 
 
 		DrawTexturePro(r.tex, src, dst, {0, 0}, 0, WHITE);

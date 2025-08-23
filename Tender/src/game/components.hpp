@@ -35,6 +35,10 @@ struct c_memb{
 	std::vector<c_memb*> childs;
 };
 
+struct c_cont{
+
+};
+
 
 
 
