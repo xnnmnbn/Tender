@@ -4,20 +4,18 @@
 #include <vector>
 
 #define RATIO (float)GetMonitorWidth(0) / (float)GetScreenWidth()
+#define SCREEN_SIZE glm::vec2(GetMonitorWidth(0), GetMonitorHeight(0))
 
 struct c_pos{
 	glm::vec2 pos;
-	glm::vec2 scale;
-};
-
-struct c_vel{
-	glm::vec2 v;
+	glm::vec2 vel;
 };
 
 struct c_rend{
 	Texture tex;
-	glm::vec2 pos;
 	glm::vec2 scale;
+	glm::vec2 slide;
+	glm::vec2 pos;
 };
 
 struct c_anim{
